@@ -15,8 +15,10 @@ services:
     name: java-quiz-web
     runtime: docker
     plan: free
-    rootDir: java-quiz-web
-    dockerfilePath: ./Dockerfile
+    # 이 저장소는 java-quiz-web 이 하위 폴더라서 경로를 저장소 루트 기준으로 명시합니다.
+    # dockerContext 를 함께 지정해야 Dockerfile 안의 COPY pom.xml . 이 제대로 동작합니다.
+    dockerfilePath: ./java-quiz-web/Dockerfile
+    dockerContext: ./java-quiz-web
     healthCheckPath: /
     envVars:
       # PostgreSQL 프로필을 켭니다. (application-postgres.properties)
