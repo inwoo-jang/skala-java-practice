@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Java Essential × Data Lab</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="eyebrow">SKALA · JAVA LEARNING LAB</div>
+    <h1>코드를 외우기보다<br><span>흐름을 읽는 연습</span></h1>
+    <p>Java 필수 개념을 확인하고 주문 로그 ETL을 완성하세요. 진행 상황은 회원 아이디별로 저장됩니다.</p>
+  </header>
+
+  <main>
+    <section id="joinPanel" class="panel join-panel">
+      <div><h2>학습 아이디로 시작하기</h2><p>처음이면 중복 확인 후 가입하고, 기존 회원이면 로그인하세요. 답안은 아이디별로 저장됩니다.</p></div>
+      <div class="join-form">
+        <input id="username" autocomplete="username" maxlength="20" placeholder="예: data_rookie">
+        <input id="password" type="password" autocomplete="current-password" maxlength="50" placeholder="비밀번호 6자 이상">
+        <button id="checkButton" class="secondary">중복 확인</button>
+        <button id="registerButton" disabled>가입하기</button>
+        <button id="loginButton" class="secondary">로그인</button>
+      </div>
+      <div id="joinMessage" class="message" aria-live="polite"></div>
+    </section>
+
+    <section id="sessionPanel" class="session-panel hidden">
+      <span><strong id="currentUser"></strong>님의 학습 기록</span>
+      <button id="logoutButton" class="ghost">이 브라우저 기록 해제</button>
+    </section>
+
+    <div id="learningApp" class="hidden">
+      <nav class="progress-nav">
+        <div><span id="progressText">0 / 13 완료</span><div class="progress"><div id="progressBar"></div></div></div>
+        <a href="#quiz">개념 퀴즈</a><a href="#lab">ETL 실습</a>
+      </nav>
+
+      <section id="quiz" class="section-heading">
+        <div class="eyebrow">PART 1 · MUST KNOW</div>
+        <h2>Java 필수 개념 우선순위 퀴즈</h2>
+        <p>문법 암기보다 코드의 역할과 데이터 흐름을 읽는 문제입니다.</p>
+      </section>
+      <div id="quizList"></div>
+
+      <section id="lab" class="section-heading">
+        <div class="eyebrow">PART 2 · DATA PIPELINE</div>
+        <h2>Generic × Lambda ETL Lab</h2>
+        <p>Extract → Transform → Load 순서로 성공 주문을 정제하고 집계합니다.</p>
+      </section>
+      <section class="panel dataset">
+        <h3>원본 주문 로그</h3>
+        <pre>List&lt;String&gt; logs = List.of(
+    "apple,3,SUCCESS", "banana,2,FAILED",
+    "apple,4,SUCCESS", "cherry,5,SUCCESS",
+    "banana,3,SUCCESS", "apple,1,FAILED"
+);</pre>
+      </section>
+      <div id="labList"></div>
+
+      <section class="panel completion">
+        <h2 id="completionTitle">13개 미션을 모두 완료해 보세요</h2>
+        <p id="completionText">작성 내용과 통과 여부는 자동으로 DB에 저장됩니다.</p>
+        <button id="showAnswerButton" class="secondary">ETL 완성 코드 보기</button>
+        <button id="copyAnswerButton">완성 코드 복사</button>
+        <pre id="fullAnswer" class="hidden"></pre>
+      </section>
+    </div>
+  </main>
+  <script src="/js/app.js"></script>
+</body>
+</html>
