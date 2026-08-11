@@ -1,15 +1,42 @@
 # Java Essential × Data Lab
 
-Java 필수 개념 퀴즈와 Generic/Lambda 기반 ETL 코드 미션을 제공하는 최소 Spring Boot 웹 앱입니다. 회원별 답안과 통과 여부를 DB에 저장합니다.
+교재 장 순서에 맞춘 Java · Spring Boot 개념 퀴즈와 ETL 코드 미션을 제공하는 Spring Boot 웹 앱입니다. 회원별 답안과 통과 여부를 DB에 저장합니다.
 
 ## 제공 기능
 
-- Java 필수 개념 퀴즈 8개: 실행 흐름, 메서드, 객체, 컬렉션, 제네릭, 람다, 예외, Spring 계층
-- ETL 코드 미션 5개: `filter`, `map`, `groupingBy`, `max`, 제네릭 결과 타입
+교재 「1. Java 이해하기」(30장)와 「2. REST API와 Spring Boot」(25장)의 장 순서를 그대로 따르는 **9개 트랙 · 32문제**입니다.
+
+| 트랙 | 교재 | 문제 |
+|---|---|---|
+| 변수와 자료형 | 1권 5장 · 11장 | 4 |
+| 클래스와 객체 | 1권 7장 · 12장 | 4 |
+| 상속 · 인터페이스 · 다형성 | 1권 14~17장 | 3 |
+| Collection Type | 1권 18장 | 4 |
+| Generic Type | 1권 19장 | 3 |
+| Lambda · Stream API | 1권 20~21장 | 5 |
+| Optional · Reflection · Annotation | 1권 22~24장 | 4 |
+| Spring Boot 구조 | 2권 5~7장 · 11장 | 3 |
+| JPA | 2권 18~19장 | 2 |
+
+문제 유형은 세 가지입니다.
+
+- **객관식** — 코드를 읽고 결과나 역할을 고릅니다.
+- **빈칸 채우기** — 코드 속 빈칸을 보기에서 고르면 그 자리에 바로 채워집니다.
+- **코드 작성** — 직접 작성하고 채점받습니다. 힌트를 1단계 → 2단계로 나눠 엽니다.
+
+데이터 엔지니어링에서 사고가 나는 지점을 문제로 넣었습니다: `double` 부동소수점 오차,
+`BigDecimal` 생성자 함정, `equals`/`hashCode` 미구현으로 깨지는 중복 제거,
+스트림 지연 연산, 순회 중 컬렉션 수정(`ConcurrentModificationException`),
+`try-with-resources`, `Map.get()` 언박싱 NPE.
+
+그 밖에:
+
 - 회원 아이디 중복 확인 및 DB unique 제약
 - BCrypt 비밀번호 해시 저장과 로그인
 - 사용자별 답안, 통과 여부, 수정 시각 저장
 - 코드 자동 임시 저장(입력 후 650ms) 및 단계별 채점
+- 트랙별 진행률, 못 푼 문제만 보기 필터
+- 밝은 테마 / 어두운 테마 자동 대응
 - H2 로컬 DB / PostgreSQL 배포 DB 지원
 
 > 코드 미션 채점은 브라우저에서 필수 문법과 구조를 검사하는 학습용 채점입니다. 제출된 Java 코드를 서버에서 실행하지 않으므로 원격 코드 실행 위험이 없습니다. 실제 컴파일 채점기는 별도의 격리 실행 환경이 필요합니다.
@@ -121,7 +148,7 @@ H2는 단일 인스턴스 로컬 학습에는 충분하지만 컨테이너가 �
 ## 학습할 때 볼 파일 순서
 
 1. `static/index.html`: 화면에 어떤 영역이 있는지
-2. `static/js/app.js`: 클릭 → 채점 → API 저장 흐름
+2. `static/js/app.js`: 문제 데이터(BANK) → 그리기(render) → 채점(grade) → 저장(api) 순서로 읽으면 됩니다
 3. `LearningApiController.java`: HTTP 요청을 Java가 받는 방식
 4. `Learner.java`, `Progress.java`: Java 객체가 DB 테이블이 되는 방식
 5. Repository: SQL을 직접 쓰지 않고 기본 저장/조회하는 방식
