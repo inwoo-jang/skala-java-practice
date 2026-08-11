@@ -1,0 +1,757 @@
+<title>컬렉션 코드 리뷰 퀴즈</title>
+<style>
+  :root {
+    --ground: #eff1ee;
+    --surface: #fafbf9;
+    --surface-2: #e5e9e4;
+    --ink: #1a1f1c;
+    --muted: #5d6660;
+    --line: #d3d8d2;
+    --line-strong: #b9c0b8;
+    --accent: #2b4c7e;
+    --accent-soft: #dde6f1;
+    --pass: #1f6a4a;
+    --pass-soft: #d9ece2;
+    --fail: #9e2b21;
+    --fail-soft: #f6dfdc;
+    --warn: #7f5a00;
+
+    --f-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", "Roboto Mono", monospace;
+    --f-body: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+
+    --step: clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem);
+    --radius: 3px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #131614;
+      --surface: #1b1f1c;
+      --surface-2: #252a26;
+      --ink: #e5eae4;
+      --muted: #98a29a;
+      --line: #313832;
+      --line-strong: #444d46;
+      --accent: #93b6e2;
+      --accent-soft: #21303f;
+      --pass: #6ec79c;
+      --pass-soft: #1c3227;
+      --fail: #ef9186;
+      --fail-soft: #37201d;
+      --warn: #dfb25f;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #131614;
+    --surface: #1b1f1c;
+    --surface-2: #252a26;
+    --ink: #e5eae4;
+    --muted: #98a29a;
+    --line: #313832;
+    --line-strong: #444d46;
+    --accent: #93b6e2;
+    --accent-soft: #21303f;
+    --pass: #6ec79c;
+    --pass-soft: #1c3227;
+    --fail: #ef9186;
+    --fail-soft: #37201d;
+    --warn: #dfb25f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 1rem + 3vw, 4rem) clamp(1rem, 0.5rem + 2vw, 2rem) 6rem;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--f-mono);
+    font-size: clamp(1.5rem, 1.1rem + 2vw, 2.4rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--muted);
+  }
+
+  /* ---------- layout ---------- */
+  .columns {
+    display: grid;
+    gap: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    margin-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  @media (min-width: 940px) {
+    .columns {
+      grid-template-columns: 17.5rem 1fr;
+      align-items: start;
+    }
+    .rail { position: sticky; top: 1.5rem; }
+  }
+
+  /* ---------- spec rail ---------- */
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+
+  .rail h2 {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .reqs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .reqs li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .req-id {
+    font-family: var(--f-mono);
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .scorebox {
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .score-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .score-val {
+    font-family: var(--f-mono);
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .score-label {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pips { display: flex; gap: 0.35rem; }
+
+  .pip {
+    width: 100%;
+    height: 5px;
+    background: var(--surface-2);
+    border-radius: 99px;
+  }
+  .pip[data-state="pass"] { background: var(--pass); }
+  .pip[data-state="fail"] { background: var(--fail); }
+
+  /* ---------- cards ---------- */
+  .cards { display: flex; flex-direction: column; gap: clamp(1.25rem, 1rem + 1vw, 2rem); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .part-no {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+
+  .card-head h3 {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .card-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .spec {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+    padding: 0.875rem 1rem;
+    background: var(--accent-soft);
+    border-radius: var(--radius);
+  }
+
+  .spec dt {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+
+  .spec dd { margin: 0; }
+  .spec dd code { font-family: var(--f-mono); font-size: 0.8125rem; }
+
+  pre {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-family: var(--f-mono);
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    tab-size: 4;
+  }
+
+  /* ---------- options ---------- */
+  fieldset { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+
+  legend {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 0 0.5rem;
+  }
+
+  .opt {
+    display: grid;
+    grid-template-columns: 1.125rem 1fr;
+    align-items: start;
+    gap: 0.75rem;
+    min-height: 3rem;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    background: var(--surface);
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+
+  .opt:hover { border-color: var(--line-strong); }
+
+  .opt input {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: 0.15rem;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--surface);
+    cursor: pointer;
+    flex: none;
+  }
+
+  .opt input:checked {
+    border-color: var(--accent);
+    border-width: 5px;
+  }
+
+  .opt input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+
+  .locked .opt { cursor: default; }
+  .locked .opt input { cursor: default; }
+
+  .opt[data-mark="correct"] { border-color: var(--pass); background: var(--pass-soft); }
+  .opt[data-mark="wrong"] { border-color: var(--fail); background: var(--fail-soft); }
+
+  /* ---------- actions & hints ---------- */
+  .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+  button {
+    font-family: var(--f-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:disabled { opacity: 0.4; cursor: default; }
+
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  button.primary:hover:not(:disabled) { filter: brightness(1.1); }
+
+  .hint {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-left: 3px solid var(--warn);
+    background: var(--surface-2);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 0.9rem;
+  }
+
+  .hint-step {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--warn);
+    padding-top: 0.15rem;
+    white-space: nowrap;
+  }
+
+  .verdict {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.125rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    font-size: 0.9375rem;
+  }
+
+  .verdict-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+
+  .chip {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 99px;
+  }
+  .chip[data-kind="pass"] { background: var(--pass); color: var(--ground); }
+  .chip[data-kind="fail"] { background: var(--fail); color: var(--ground); }
+  .chip[data-kind="req"] { background: transparent; border: 1px solid var(--line-strong); color: var(--muted); }
+
+  .verdict p { margin: 0; }
+  .verdict p + p { margin-top: 0.5rem; }
+  .verdict code, .inline-code {
+    font-family: var(--f-mono);
+    font-size: 0.85em;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0.05em 0.3em;
+  }
+
+  .out {
+    font-family: var(--f-mono);
+    font-size: 0.8125rem;
+    white-space: pre-wrap;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.875rem;
+    overflow-x: auto;
+  }
+
+  .hidden { display: none; }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <span class="eyebrow">Java Collection · Code Review</span>
+    <h1>요구사항대로 구현되지 않은 곳을 찾아라</h1>
+    <p class="lede">
+      아래 네 개의 파트가 리뷰 요청으로 올라왔습니다. 컴파일은 전부 통과합니다.
+      하지만 요구사항을 만족하지 못하는 곳이 있습니다. 막히면 힌트를 1단계씩 열어보세요.
+    </p>
+  </header>
+
+  <div class="columns">
+    <aside class="rail">
+      <h2>공통 요구사항</h2>
+      <ul class="reqs">
+        <li><span class="req-id">R1</span><span>프로그램은 예외 없이 끝까지 실행되어야 한다.</span></li>
+        <li><span class="req-id">R2</span><span>같은 입력이면 어느 컴퓨터에서 몇 번을 돌리든 같은 결과가 나와야 한다.</span></li>
+        <li><span class="req-id">R3</span><span>실제로 쓰이지 않는 변수나 코드가 남아 있으면 안 된다.</span></li>
+      </ul>
+
+      <h2>입력 데이터</h2>
+      <pre>ORDERS = {
+  "apple,3",  "banana,5",
+  "apple,2",  "cherry,1",
+  "banana,2", "apple,4",
+  "durian,5", "cherry,1"
+}</pre>
+
+      <div class="scorebox">
+        <div class="score-line">
+          <span class="score-val" id="score">0 / 4</span>
+          <span class="score-label" id="score-label">시작 전</span>
+        </div>
+        <div class="pips">
+          <span class="pip" data-pip="0"></span>
+          <span class="pip" data-pip="1"></span>
+          <span class="pip" data-pip="2"></span>
+          <span class="pip" data-pip="3"></span>
+        </div>
+        <button type="button" id="reset">처음부터 다시</button>
+      </div>
+    </aside>
+
+    <main class="cards" id="cards"></main>
+  </div>
+
+  <footer>
+    원본 코드: <span class="inline-code">java_basic/collection_example/quiz/OrderQuiz.java</span> ·
+    네 파트 모두 실제로 실행해 결과를 확인한 문제입니다.
+  </footer>
+</div>
+
+<script>
+  const OPTIONS = [
+    { id: "ok",     text: "요구사항대로 정상 동작한다." },
+    { id: "req",    text: "기대 결과는 맞지만 공통 요구사항을 어겼다." },
+    { id: "wrong",  text: "예외는 안 나지만 기대와 다른 값이 나온다." },
+    { id: "throws", text: "실행하면 예외가 터진다." },
+  ];
+
+  const PARTS = [
+    {
+      no: "PART 1",
+      title: "주문 목록 출력하기",
+      spec: "전체 주문을 <code>N번 주문: 상품명,수량</code> 형태로 출력한다.",
+      expect: "1번 주문: apple,3 &nbsp;~&nbsp; 8번 주문: cherry,1 (총 8줄)",
+      code:
+`List<String> orderList = new ArrayList<>(Arrays.asList(ORDERS));
+
+Iterator<String> orderIterator = orderList.iterator();
+
+int orderNumber = 1;
+for (String order : orderList) {
+    System.out.println(orderNumber + "번 주문: " + order);
+    orderNumber++;
+}`,
+      answer: "req",
+      hints: [
+        "출력 자체는 완벽합니다. 8줄이 그대로 나옵니다. 그러니 R1, R2가 아니라 남은 요구사항 하나를 의심하세요.",
+        "3번째 줄에서 만든 변수를 아래에서 누가 쓰고 있나요? for-each는 그 변수를 쓰지 않습니다."
+      ],
+      violates: "R3",
+      output: "1번 주문: apple,3\n2번 주문: banana,5\n… (8줄 정상 출력)",
+      why: [
+        "<code>orderIterator</code>를 만들어놓고 한 번도 쓰지 않습니다. 실행에는 지장이 없지만, 읽는 사람에게 \"여기서 이터레이터를 쓰나 보다\"라는 잘못된 신호를 줍니다.",
+        "재미있는 사실: for-each는 컴파일되면 내부적으로 이터레이터를 만들어 씁니다. 즉 이 코드에는 이터레이터가 두 개 생기고 하나만 쓰이는 셈입니다.",
+        "고치는 법: 그 줄을 지우세요. 끝입니다."
+      ]
+    },
+    {
+      no: "PART 2",
+      title: "가장 먼저 등록된 상품 확인하기",
+      spec: "ORDERS에 가장 먼저 등장한 상품명을 출력한다. <code>ORDERS[0]</code>이 <code>\"apple,3\"</code>이므로 정답은 apple이다.",
+      expect: "가장 먼저 등록된 상품: apple / apple이 맞는가? true",
+      code:
+`Map<String, Integer> totalMap = new HashMap<>();
+
+for (String order : ORDERS) {
+    String[] parts = order.split(",");
+    totalMap.put(parts[0],
+        totalMap.getOrDefault(parts[0], 0) + Integer.parseInt(parts[1]));
+}
+
+// apple을 가장 먼저 넣었으니 Map에서도 apple이 첫 번째로 나올 것이다.
+String firstProduct = totalMap.keySet().iterator().next();
+System.out.println("가장 먼저 등록된 상품: " + firstProduct);
+System.out.println("apple이 맞는가? " + firstProduct.equals("apple"));`,
+      answer: "wrong",
+      hints: [
+        "예외는 나지 않습니다. 마지막 두 줄이 무엇을 가정하고 있는지 보세요. 주석에 그 가정이 그대로 적혀 있습니다.",
+        "HashMap은 넣은 순서를 기억할까요? 키를 어디에 저장할지는 무엇이 정하나요?"
+      ],
+      violates: "PART 2 요구사항 + R2",
+      output: "가장 먼저 등록된 상품: banana\napple이 맞는가? false",
+      why: [
+        "<code>HashMap</code>은 <strong>입력 순서를 보장하지 않습니다.</strong> 키의 해시값으로 저장 위치가 정해지기 때문에 apple을 먼저 넣어도 banana가 먼저 나올 수 있습니다.",
+        "이게 왜 무서운가: 예외가 안 터집니다. 조용히 틀린 값이 나옵니다. 우연히 통과하는 경우도 있어서 \"내 컴퓨터에선 됐는데?\"의 전형적인 원인이 됩니다.",
+        "고치는 법: 입력 순서가 필요하면 <code>LinkedHashMap</code>, 키 정렬이 필요하면 <code>TreeMap</code>. 변수를 <code>Map</code> 타입으로 선언해뒀으니 선언 한 줄만 바꾸면 됩니다 — 인터페이스로 선언하는 습관의 이점입니다."
+      ]
+    },
+    {
+      no: "PART 3",
+      title: "수량이 3개 미만인 주문 제거하기",
+      spec: "수량 3개 미만 주문을 목록에서 빼고 남은 주문을 출력한다.",
+      expect: "남은 주문: [apple,3, banana,5, apple,4, durian,5]",
+      code:
+`List<String> orderList = new ArrayList<>(Arrays.asList(ORDERS));
+
+for (String order : orderList) {
+    int quantity = Integer.parseInt(order.split(",")[1]);
+    if (quantity < 3) {
+        orderList.remove(order);
+    }
+}
+
+System.out.println("남은 주문: " + orderList);`,
+      answer: "throws",
+      hints: [
+        "for-each가 도는 동안 리스트의 크기가 변하고 있습니다. 순회하는 쪽은 그 사실을 알고 있을까요?",
+        "for-each는 내부적으로 이터레이터를 씁니다. 그 이터레이터는 \"리스트가 몇 번 수정됐는지\"를 기록해두고 매번 확인합니다."
+      ],
+      violates: "R1",
+      output: "Exception in thread \"main\" java.util.ConcurrentModificationException\n\tat java.base/java.util.ArrayList$Itr.checkForComodification(...)",
+      why: [
+        "for-each가 쓰는 이터레이터는 리스트의 수정 횟수(<code>modCount</code>)를 기억해두고, <code>next()</code>를 부를 때마다 \"내가 알던 횟수와 지금이 같은가\"를 확인합니다. <code>list.remove()</code>는 이터레이터 몰래 리스트를 고치므로 다음 <code>next()</code>에서 걸립니다.",
+        "고치는 법: 이터레이터를 직접 만들고 <code>it.remove()</code>를 쓰면 이터레이터가 자기 상태도 같이 갱신합니다. 자바 8 이상이면 <code>orderList.removeIf(o -> ...)</code> 한 줄로도 됩니다.",
+        "심화: 이 예외는 <strong>항상</strong> 터지는 게 아닙니다. 끝에서 두 번째 요소를 지우면 반복이 조용히 끝나버려 예외 없이 통과합니다. 데이터를 바꿔가며 직접 확인해보세요 — \"가끔 되는\" 버그가 제일 위험합니다."
+      ]
+    },
+    {
+      no: "PART 4",
+      title: "첫 번째 주문 취소하기",
+      spec: "첫 번째 주문을 취소하고 취소 전후 건수를 출력한다.",
+      expect: "취소 전: 8건 / 취소 후: 7건",
+      code:
+`List<String> orderList = Arrays.asList(ORDERS);
+
+System.out.println("취소 전: " + orderList.size() + "건");
+orderList.remove(0);
+System.out.println("취소 후: " + orderList.size() + "건");`,
+      answer: "throws",
+      hints: [
+        "첫 줄을 PART 1, PART 3의 첫 줄과 나란히 놓고 비교해보세요. 무엇이 빠졌나요?",
+        "<code>Arrays.asList()</code>가 돌려주는 것의 <code>getClass().getName()</code>을 찍어보면 무엇이 나올까요? <code>java.util.ArrayList</code>가 맞을까요?"
+      ],
+      violates: "R1",
+      output: "취소 전: 8건\nException in thread \"main\" java.lang.UnsupportedOperationException",
+      why: [
+        "<code>Arrays.asList()</code>가 돌려주는 건 <code>java.util.ArrayList</code>가 <strong>아닙니다.</strong> <code>Arrays</code> 안에 있는 별개의 클래스 <code>java.util.Arrays$ArrayList</code>입니다. 이름만 같습니다.",
+        "그건 배열을 들여다보는 창(뷰)이라서 크기가 배열에 묶여 있습니다. 그래서 <code>add</code>/<code>remove</code>를 지원하지 않습니다.",
+        "보너스: <code>set()</code>은 됩니다. 그런데 값을 바꾸면 <strong>원본 배열까지 바뀝니다.</strong> 이걸 직접 찍어보면 \"뷰\"라는 개념이 한 번에 이해됩니다.",
+        "고치는 법: <code>new ArrayList&lt;&gt;(Arrays.asList(ORDERS))</code> — 요소를 복사해 진짜 내 리스트를 만듭니다."
+      ]
+    }
+  ];
+
+  const state = PARTS.map(() => ({ answered: false, correct: false, hintsShown: 0 }));
+
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function render() {
+    const host = document.getElementById("cards");
+    host.innerHTML = "";
+
+    PARTS.forEach((part, i) => {
+      const card = document.createElement("section");
+      card.className = "card";
+
+      const opts = OPTIONS.map((o, j) => `
+        <label class="opt" data-opt="${o.id}">
+          <input type="radio" name="q${i}" value="${o.id}" id="q${i}o${j}">
+          <span>${o.text}</span>
+        </label>`).join("");
+
+      const hints = part.hints.map((h, j) => `
+        <div class="hint hidden" data-hint="${j}">
+          <span class="hint-step">힌트 ${j + 1}</span>
+          <span>${h}</span>
+        </div>`).join("");
+
+      card.innerHTML = `
+        <div class="card-head">
+          <span class="part-no">${part.no}</span>
+          <h3>${part.title}</h3>
+        </div>
+        <div class="card-body">
+          <dl class="spec">
+            <dt>요구사항</dt><dd>${part.spec}</dd>
+            <dt>기대 결과</dt><dd>${part.expect}</dd>
+          </dl>
+
+          <pre><code>${esc(part.code)}</code></pre>
+
+          <fieldset data-fs>
+            <legend>이 코드를 실행하면?</legend>
+            ${opts}
+          </fieldset>
+
+          ${hints}
+
+          <div class="actions">
+            <button type="button" class="primary" data-check disabled>정답 확인</button>
+            <button type="button" data-hint-btn>힌트 보기</button>
+          </div>
+
+          <div class="verdict hidden" data-verdict></div>
+        </div>`;
+
+      host.appendChild(card);
+      wire(card, i);
+    });
+
+    updateScore();
+  }
+
+  function wire(card, i) {
+    const fs = card.querySelector("[data-fs]");
+    const checkBtn = card.querySelector("[data-check]");
+    const hintBtn = card.querySelector("[data-hint-btn]");
+    const verdict = card.querySelector("[data-verdict]");
+    const part = PARTS[i];
+
+    fs.addEventListener("change", () => {
+      if (!state[i].answered) checkBtn.disabled = false;
+    });
+
+    hintBtn.addEventListener("click", () => {
+      const next = state[i].hintsShown;
+      if (next >= part.hints.length) return;
+      card.querySelector(`[data-hint="${next}"]`).classList.remove("hidden");
+      state[i].hintsShown = next + 1;
+      if (state[i].hintsShown >= part.hints.length) {
+        hintBtn.disabled = true;
+        hintBtn.textContent = "힌트 모두 열림";
+      } else {
+        hintBtn.textContent = `힌트 ${state[i].hintsShown + 1}단계 보기`;
+      }
+    });
+
+    checkBtn.addEventListener("click", () => {
+      const picked = fs.querySelector("input:checked");
+      if (!picked || state[i].answered) return;
+
+      const correct = picked.value === part.answer;
+      state[i].answered = true;
+      state[i].correct = correct;
+
+      fs.classList.add("locked");
+      fs.querySelectorAll("input").forEach(el => { el.disabled = true; });
+      fs.querySelector(`[data-opt="${part.answer}"]`).dataset.mark = "correct";
+      if (!correct) picked.closest(".opt").dataset.mark = "wrong";
+
+      checkBtn.disabled = true;
+      hintBtn.disabled = true;
+
+      verdict.innerHTML = `
+        <div class="verdict-head">
+          <span class="chip" data-kind="${correct ? "pass" : "fail"}">${correct ? "정답" : "오답"}</span>
+          <span class="chip" data-kind="req">위반: ${part.violates}</span>
+        </div>
+        <div class="out">${esc(part.output)}</div>
+        ${part.why.map(p => `<p>${p}</p>`).join("")}`;
+      verdict.classList.remove("hidden");
+
+      updateScore();
+    });
+  }
+
+  function updateScore() {
+    const done = state.filter(s => s.answered).length;
+    const right = state.filter(s => s.correct).length;
+    document.getElementById("score").textContent = `${right} / 4`;
+    document.getElementById("score-label").textContent =
+      done === 0 ? "시작 전" : done < 4 ? `${done}문제 풂` : "완료";
+
+    state.forEach((s, i) => {
+      const pip = document.querySelector(`[data-pip="${i}"]`);
+      if (!s.answered) pip.removeAttribute("data-state");
+      else pip.dataset.state = s.correct ? "pass" : "fail";
+    });
+  }
+
+  document.getElementById("reset").addEventListener("click", () => {
+    state.forEach(s => { s.answered = false; s.correct = false; s.hintsShown = 0; });
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  render();
+</script>
