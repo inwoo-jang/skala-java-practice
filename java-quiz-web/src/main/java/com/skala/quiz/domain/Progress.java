@@ -17,6 +17,8 @@ public class Progress {
     private String answer;
     @Column(nullable = false)
     private boolean passed;
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean attempted;
     @Column(nullable = false)
     private Instant updatedAt;
 
@@ -27,13 +29,15 @@ public class Progress {
         this.answer = "";
         this.updatedAt = Instant.now();
     }
-    public void update(String answer, boolean passed) {
+    public void update(String answer, boolean passed, boolean attempted) {
         this.answer = answer;
         this.passed = passed;
+        this.attempted = attempted;
         this.updatedAt = Instant.now();
     }
     public String getQuestionKey() { return questionKey; }
     public String getAnswer() { return answer; }
     public boolean isPassed() { return passed; }
+    public boolean isAttempted() { return attempted; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

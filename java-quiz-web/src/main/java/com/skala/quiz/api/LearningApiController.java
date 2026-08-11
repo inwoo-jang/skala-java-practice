@@ -64,7 +64,7 @@ public class LearningApiController {
     public List<ProgressResponse> load(@RequestHeader("X-Access-Token") String token) {
         Learner learner = authenticate(token);
         return progress.findAllByLearnerOrderByQuestionKey(learner).stream()
-                .map(item -> new ProgressResponse(item.getQuestionKey(), item.getAnswer(), item.isPassed(), item.getUpdatedAt()))
+                .map(item -> new ProgressResponse(item.getQuestionKey(), item.getAnswer(), item.isPassed(), item.isAttempted(), item.getUpdatedAt()))
                 .toList();
     }
 
@@ -78,9 +78,23 @@ public class LearningApiController {
         }
         Progress item = progress.findByLearnerAndQuestionKey(learner, questionKey)
                 .orElseGet(() -> new Progress(learner, questionKey));
-        item.update(request.answer() == null ? "" : request.answer(), request.passed());
+        item.update(request.answer() == null ? "" : request.answer(), request.passed(), request.attempted());
         Progress saved = progress.save(item);
-        return new ProgressResponse(saved.getQuestionKey(), saved.getAnswer(), saved.isPassed(), saved.getUpdatedAt());
+        return new ProgressResponse(saved.getQuestionKey(), saved.getAnswer(), saved.isPassed(), saved.isAttempted(), saved.getUpdatedAt());
+    }
+
+    @DeleteMapping("/progress/{questionKey}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOne(@RequestHeader("X-Access-Token") String token, @PathVariable String questionKey) {
+        Learner learner = authenticate(token);
+        progress.findByLearnerAndQuestionKey(learner, questionKey).ifPresent(progress::delete);
+    }
+
+    @DeleteMapping("/progress")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAll(@RequestHeader("X-Access-Token") String token) {
+        Learner learner = authenticate(token);
+        progress.deleteAll(progress.findAllByLearnerOrderByQuestionKey(learner));
     }
 
     private Learner authenticate(String token) {
@@ -106,6 +120,6 @@ public class LearningApiController {
     public record RegisterRequest(String username, String password) {}
     public record Availability(String username, boolean available) {}
     public record UserSession(String username, String accessToken) {}
-    public record SaveProgressRequest(String answer, boolean passed) {}
-    public record ProgressResponse(String questionKey, String answer, boolean passed, Instant updatedAt) {}
+    public record SaveProgressRequest(String answer, boolean passed, boolean attempted) {}
+    public record ProgressResponse(String questionKey, String answer, boolean passed, boolean attempted, Instant updatedAt) {}
 }

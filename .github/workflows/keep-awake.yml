@@ -1,0 +1,96 @@
+# Render 무료 플랜은 15분간 요청이 없으면 서비스를 재웁니다.
+# 다시 깨어나는 데 30초~1분이 걸려서, 수업 시간대에만 주기적으로 깨워 둡니다.
+#
+# 사용 전 준비 (한 번만):
+#   저장소 Settings > Secrets and variables > Actions > Variables 탭에서
+#   APP_URL 이라는 변수에 배포 주소를 넣습니다.
+#   예) https://java-quiz-web-xxxx.onrender.com
+#   변수가 없으면 이 워크플로는 아무 일도 하지 않고 조용히 끝납니다.
+#
+# 실행 시간 비용 안내:
+#   비공개 저장소는 GitHub Actions 무료 한도가 월 2,000분입니다.
+#   실행 1회가 몇 초로 끝나도 과금은 1분 단위로 올림됩니다.
+#   아래 설정(8월 10~14일, 09~19시 KST, 13분 간격)은 다 합쳐 약 250분입니다.
+#
+# 주의:
+#   Render 는 15분간 요청이 없으면 재웁니다. 간격이 13분이라 여유가 2분뿐인데,
+#   GitHub 예약 실행은 부하에 따라 몇 분 늦어질 때가 있습니다.
+#   그때는 한 번씩 잠들 수 있습니다. 확실히 하려면 10분으로 줄이세요.
+#
+# 이번 주가 지나면:
+#   아래 cron 이 8월 10~14일에만 걸려 있어 저절로 멈춥니다.
+#   다음에 또 쓸 일이 없다면 이 파일을 지워도 됩니다.
+
+name: keep-awake
+
+on:
+  schedule:
+    # cron 은 UTC 기준입니다. 0~9시 UTC = 09~19시 KST (한국은 UTC+9).
+    # 8월 10일~14일(이번 주 월~금)에만, 13분 간격으로 실행합니다.
+    # 분 필드 */13 은 0, 13, 26, 39, 52분에 걸립니다.
+    - cron: "*/13 0-9 10-14 8 *"
+
+  # 필요할 때 손으로 깨우기 (수업 직전 등).
+  # Actions 탭 > keep-awake > Run workflow
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "깨울 주소 (비우면 APP_URL 변수를 사용합니다)"
+        required: false
+        type: string
+
+# 앞 실행이 아직 안 끝났으면 겹쳐 돌리지 않습니다.
+concurrency:
+  group: keep-awake
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 주소 확인
+        id: target
+        env:
+          INPUT_URL: ${{ inputs.url }}
+          VAR_URL: ${{ vars.APP_URL }}
+        run: |
+          URL="${INPUT_URL:-$VAR_URL}"
+          if [ -z "$URL" ]; then
+            echo "APP_URL 변수가 설정돼 있지 않아 건너뜁니다." >> "$GITHUB_STEP_SUMMARY"
+            echo "설정 위치: Settings > Secrets and variables > Actions > Variables" >> "$GITHUB_STEP_SUMMARY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "url=${URL%/}" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: 깨우기
+        if: steps.target.outputs.skip == 'false'
+        env:
+          URL: ${{ steps.target.outputs.url }}
+        run: |
+          # 잠들어 있으면 응답까지 1분 가까이 걸릴 수 있어 넉넉히 기다립니다.
+          # 실패하면 최대 3번까지 다시 시도합니다.
+          STATUS=$(curl --silent --show-error --location \
+                        --max-time 90 --retry 3 --retry-delay 15 --retry-all-errors \
+                        --output /dev/null --write-out "%{http_code}" \
+                        "$URL/") || STATUS="연결 실패"
+
+          ELAPSED=$(curl --silent --location --max-time 90 \
+                         --output /dev/null --write-out "%{time_total}" "$URL/") || ELAPSED="?"
+
+          {
+            echo "### keep-awake"
+            echo ""
+            echo "- 주소: $URL"
+            echo "- 응답 코드: $STATUS"
+            echo "- 두 번째 요청 응답 시간: ${ELAPSED}초 (1초 미만이면 깨어 있는 상태입니다)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # 200이 아니면 실패로 남겨 배포가 죽은 것을 알아챌 수 있게 합니다.
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::앱이 200을 돌려주지 않았습니다 (받은 값: $STATUS). 배포 상태를 확인하세요."
+            exit 1
+          fi

@@ -617,7 +617,8 @@ const state = {
   records: new Map(),      // questionKey -> 서버가 돌려준 답안 기록
   hintsShown: new Map(),   // questionKey -> 열어 본 힌트 단계 수
   saveTimers: new Map(),   // questionKey -> 자동 저장 타이머
-  hideDone: false
+  hideDone: false,
+  deleteTarget: null       // 삭제 확인 창이 노리고 있는 대상
 };
 
 const $ = selector => document.querySelector(selector);
@@ -757,7 +758,7 @@ function gradeChoice(question) {
   if (!passed) options.children[picked].dataset.mark = 'wrong';
 
   showVerdict(question, passed, question.explain);
-  save(question.key, String(picked), passed);
+  save(question.key, String(picked), passed, true);
 }
 
 function gradeWrite(question) {
@@ -771,7 +772,7 @@ function gradeWrite(question) {
     passed,
     passed ? '통과! 핵심 문법과 데이터 흐름이 정확합니다.' : failed[1]
   );
-  save(question.key, answer, passed);
+  save(question.key, answer, passed, true);
 }
 
 function showVerdict(question, passed, message) {
@@ -838,13 +839,15 @@ async function api(path, options = {}) {
   return response.status === 204 ? null : response.json();
 }
 
-async function save(key, answer, passed) {
+/* attempted = "채점 버튼을 눌러 본 적이 있는가".
+   자동 임시 저장과 실제 채점을 구분해야 오답 노트에 초안이 섞이지 않습니다. */
+async function save(key, answer, passed, attempted) {
   const label = document.querySelector(`[data-saved="${key}"]`);
   label.textContent = '저장 중…';
   try {
     const record = await api('/api/progress/' + key, {
       method: 'PUT',
-      body: JSON.stringify({ answer, passed })
+      body: JSON.stringify({ answer, passed, attempted })
     });
     state.records.set(key, record);
     label.textContent = 'DB 저장 완료';
@@ -859,7 +862,9 @@ function queueDraft(key, answer) {
   clearTimeout(state.saveTimers.get(key));
   state.saveTimers.set(key, setTimeout(() => {
     const previous = state.records.get(key);
-    save(key, answer, Boolean(previous?.passed && previous.answer === answer));
+    save(key, answer,
+         Boolean(previous?.passed && previous.answer === answer),
+         Boolean(previous?.attempted));
   }, 650));
 }
 
@@ -969,6 +974,7 @@ function logout() {
   $('#meterBox').classList.add('hidden');
   render();
   bindCards();
+  renderWrongList();
 }
 
 /* -------------------------------------------------------------------------
@@ -998,7 +1004,115 @@ function updateProgress() {
     $('#finishText').textContent = '작성 내용과 통과 여부는 입력 직후 자동으로 DB에 저장됩니다.';
   }
 
+  renderWrongList();
   if (state.hideDone) applyFilter();
+}
+
+/* -------------------------------------------------------------------------
+ * 8-1) 오답 노트
+ *
+ * 채점을 해 본 적이 있고(attempted) 아직 통과하지 못한(passed=false) 문제만 모읍니다.
+ * 코드 칸에 글자만 쳐 둔 초안은 채점 이력이 없으므로 여기 들어오지 않습니다.
+ * ---------------------------------------------------------------------- */
+
+function renderWrongList() {
+  const panel = $('#wrongPanel');
+  const badge = $('#wrongBadge');
+
+  const wrong = ALL.filter(question => {
+    const record = state.records.get(question.key);
+    return record && record.attempted && !record.passed;
+  });
+
+  badge.textContent = wrong.length;
+  badge.dataset.has = String(wrong.length > 0);
+
+  if (!wrong.length) {
+    panel.innerHTML = '<p class="wrong-empty">아직 오답이 없습니다. 채점해서 틀린 문제가 여기에 모입니다.</p>';
+    return;
+  }
+
+  panel.innerHTML = wrong.map(question => {
+    const track = BANK.find(t => t.id === question.trackId);
+    return `
+      <div class="wrong-item">
+        <a href="#track-${question.trackId}" data-goto="${question.key}">${escapeHtml(question.title)}</a>
+        <p>${escapeHtml(track.name)} · ${TYPE_LABEL[question.type]}</p>
+        <div class="actions">
+          <button class="tiny" data-goto="${question.key}">다시 풀기</button>
+          <button class="tiny danger" data-delete="${question.key}">기록 삭제</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* 오답 노트에서 문제를 누르면 해당 카드로 이동하고, 필터가 켜져 있어도 보이게 합니다. */
+function goToQuestion(key) {
+  const card = cardOf(key);
+  if (!card) return;
+  card.classList.remove('hidden');
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* -------------------------------------------------------------------------
+ * 8-2) 기록 삭제 (되돌릴 수 없으므로 반드시 확인 창을 거칩니다)
+ * ---------------------------------------------------------------------- */
+
+function openDeleteModal(target) {
+  state.deleteTarget = target;
+  const all = target === 'all';
+  const question = all ? null : ALL.find(q => q.key === target);
+
+  $('#modalTitle').textContent = all ? '전체 학습 기록을 삭제할까요?' : '이 문제의 기록을 삭제할까요?';
+  $('#modalText').textContent = all
+    ? '모든 답안과 채점 결과가 지워집니다. 되돌릴 수 없습니다.'
+    : `"${question ? question.title : target}"의 답안과 채점 결과가 지워집니다. 되돌릴 수 없습니다.`;
+  $('#deleteModal').showModal();
+}
+
+async function confirmDelete() {
+  const target = state.deleteTarget;
+  if (!target) return;
+
+  try {
+    if (target === 'all') {
+      await api('/api/progress', { method: 'DELETE' });
+      state.records.clear();
+      render();
+      bindCards();
+    } else {
+      await api('/api/progress/' + target, { method: 'DELETE' });
+      state.records.delete(target);
+      resetCard(target);
+    }
+    updateProgress();
+    $('#deleteModal').close();
+  } catch (error) {
+    $('#modalText').textContent = '삭제하지 못했습니다: ' + error.message;
+  }
+}
+
+/* 카드 한 장을 처음 상태로 되돌립니다. */
+function resetCard(key) {
+  const question = ALL.find(q => q.key === key);
+  const card = cardOf(key);
+  if (!question || !card) return;
+
+  delete card.dataset.state;
+  card.querySelector('[data-verdict]').classList.add('hidden');
+
+  if (question.type === 'write') {
+    card.querySelector('textarea').value = question.starter;
+    return;
+  }
+
+  const options = card.querySelector('[data-options]');
+  delete options.dataset.locked;
+  options.querySelectorAll('input').forEach(input => { input.disabled = false; input.checked = false; });
+  options.querySelectorAll('.opt').forEach(opt => { delete opt.dataset.mark; });
+
+  const slot = card.querySelector('[data-blank]');
+  if (slot) { slot.textContent = '____'; delete slot.dataset.filled; }
 }
 
 function applyFilter() {
@@ -1027,10 +1141,12 @@ document.addEventListener('click', event => {
   const target = event.target;
   if (target.dataset.grade) grade(target.dataset.grade);
   if (target.dataset.hint) showNextHint(target.dataset.hint);
+  if (target.dataset.goto) goToQuestion(target.dataset.goto);
+  if (target.dataset.delete) openDeleteModal(target.dataset.delete);
   if (target.dataset.reset) {
     const question = ALL.find(q => q.key === target.dataset.reset);
     cardOf(question.key).querySelector('textarea').value = question.starter;
-    save(question.key, question.starter, false);
+    save(question.key, question.starter, false, Boolean(state.records.get(question.key)?.attempted));
   }
 });
 
@@ -1059,6 +1175,12 @@ $('#logoutButton').addEventListener('click', logout);
 $('#username').addEventListener('input', () => {
   $('#registerButton').disabled = true;
   setMessage('아이디를 바꿨습니다. 중복 확인을 다시 눌러 주세요.');
+});
+
+$('#deleteAllButton').addEventListener('click', () => openDeleteModal('all'));
+$('#confirmDeleteButton').addEventListener('click', event => {
+  event.preventDefault();   // form method="dialog" 의 기본 닫기를 막고 삭제 후 직접 닫습니다.
+  confirmDelete();
 });
 
 $('#filterButton').addEventListener('click', () => {

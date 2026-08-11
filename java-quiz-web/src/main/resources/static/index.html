@@ -78,8 +78,14 @@
   "apple,1,FAILED");</pre>
         </div>
 
+        <div class="rail-block">
+          <span class="label">오답 노트 <strong id="wrongBadge" class="badge">0</strong></span>
+          <div id="wrongPanel" class="wrong-panel"></div>
+        </div>
+
         <div class="rail-actions">
           <button id="filterButton">아직 못 푼 문제만 보기</button>
+          <button id="deleteAllButton" class="danger">전체 기록 삭제</button>
         </div>
       </aside>
 
@@ -98,6 +104,17 @@
     </section>
 
   </div>
+
+  <dialog id="deleteModal" class="modal">
+    <form method="dialog" class="modal-inner">
+      <h2 id="modalTitle">기록을 삭제할까요?</h2>
+      <p id="modalText">삭제한 기록은 복구할 수 없으며 오답 노트에서도 함께 사라집니다.</p>
+      <div class="actions">
+        <button value="cancel">취소</button>
+        <button id="confirmDeleteButton" class="danger" value="confirm">삭제</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="/js/app.js"></script>
 </body>

@@ -385,6 +385,69 @@ button.tiny { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
 
 .rail-actions { display: flex; flex-direction: column; gap: 0.5rem; }
 
+/* ---------- 오답 노트 ---------- */
+
+.badge {
+  display: inline-block;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 99px;
+  background: var(--surface-3);
+  color: var(--ink);
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.badge[data-has="true"] { background: var(--fail); color: var(--ground); }
+
+.wrong-panel { display: flex; flex-direction: column; gap: 0.375rem; }
+
+.wrong-empty {
+  padding: 0.75rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.wrong-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--fail);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--surface);
+}
+
+.wrong-item a { color: var(--ink); text-decoration: none; font-size: 0.875rem; font-weight: 600; }
+.wrong-item a:hover { color: var(--accent); text-decoration: underline; }
+.wrong-item p { font-size: 0.75rem; color: var(--muted); }
+.wrong-item .actions { gap: 0.375rem; }
+
+button.danger { border-color: var(--fail); color: var(--fail); }
+button.danger:hover:not(:disabled) { background: var(--fail); border-color: var(--fail); color: var(--ground); }
+
+/* ---------- 삭제 확인 창 ---------- */
+
+.modal {
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  max-width: min(26rem, calc(100vw - 2rem));
+}
+.modal::backdrop { background: rgba(0, 0, 0, 0.45); }
+
+.modal-inner { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem; }
+.modal-inner h2 { font-size: 1.0625rem; }
+.modal-inner p { color: var(--muted); font-size: 0.9375rem; }
+.modal-inner .actions { justify-content: flex-end; }
+
 /* ---------- 트랙 헤딩 ---------- */
 
 .track { display: flex; flex-direction: column; gap: 1rem; }
